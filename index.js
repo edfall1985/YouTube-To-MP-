@@ -7,6 +7,10 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.send("🔥 API YT to MP3 Bro Joe is LIVE!");
+});
+
 app.post("/download", (req, res) => {
   const url = req.body.youtube_url;
   if (!url) return res.status(400).json({ error: "youtube_url is required" });
@@ -23,7 +27,6 @@ app.post("/download", (req, res) => {
   });
 });
 
-
-
-
-
+app.listen(port, () => {
+  console.log(`🚀 Server running on port ${port}`);
+});
