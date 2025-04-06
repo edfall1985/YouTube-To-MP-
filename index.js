@@ -4,7 +4,7 @@ const { YtDlpWrap } = require("yt-dlp-wrap");
 const app = express();
 const port = process.env.PORT || 3000;
 
-const ytDlpWrap = YtDlpWrap(); // Jangan pakai 'new'
+const ytDlpWrap = new YtDlpWrap(); // ← HARUS pakai 'new'
 
 app.use(cors());
 app.use(express.json());
@@ -26,7 +26,7 @@ app.post("/download", async (req, res) => {
       "--audio-format",
       "mp3",
       "-o",
-      "-",
+      "-"
     ]);
 
     process.stdout.on("data", (data) => {
