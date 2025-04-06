@@ -4,7 +4,7 @@ const { YtDlpWrap } = require("yt-dlp-wrap");
 const app = express();
 const port = process.env.PORT || 3000;
 
-const ytDlpWrap = new YtDlpWrap();
+const ytDlpWrap = YtDlpWrap(); // Jangan pakai 'new'
 
 app.use(cors());
 app.use(express.json());
@@ -17,17 +17,28 @@ app.post("/download", async (req, res) => {
   const url = req.body.youtube_url;
   if (!url) return res.status(400).json({ error: "youtube_url is required" });
 
+  let output = "";
+
   try {
-    const output = await ytDlpWrap.execPromise([
+    const process = ytDlpWrap.exec([
       url,
       "-x",
-      "--audio-format", "mp3",
-      "-o", "%(title)s.%(ext)s"
+      "--audio-format",
+      "mp3",
+      "-o",
+      "-",
     ]);
 
-    res.json({ message: "Download succeeded", log: output });
+    process.stdout.on("data", (data) => {
+      output += data.toString();
+    });
+
+    process.on("close", () => {
+      res.json({ message: "Download success", log: output });
+    });
   } catch (err) {
-    res.status(500).json({ error: "Download failed", detail: err.toString() });
+    console.error("❌ Error:", err);
+    res.status(500).json({ error: "Download failed" });
   }
 });
 
