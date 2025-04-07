@@ -1,19 +1,18 @@
+
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("✅ convert.js loaded...");
+  console.log("convert.js loaded!");
 
   const urlInput = document.getElementById("url");
   const convertBtn = document.getElementById("convert-btn");
   const ytPlayer = document.getElementById("yt-player");
   const previewDiv = document.getElementById("preview");
 
-  // Ambil ID YouTube dari URL
   function extractYouTubeID(url) {
-    const regex = /(?:youtube\\.com.*(?:v=|\\/embed\\/)|youtu\\.be\\/)([\\w-]{11})/;
+    const regex = /(?:youtube\.com.*(?:v=|\/embed\/)|youtu\.be\/)([\w-]{11})/;
     const match = url.match(regex);
     return match ? match[1] : null;
   }
 
-  // Load rekomendasi video
   async function loadRecommendations() {
     const container = document.getElementById("recommend-list");
     try {
@@ -30,10 +29,11 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="small">${data.title}</div>
         `;
         div.onclick = () => {
+          console.log("Thumbnail clicked:", url);
           urlInput.value = url;
           const id = extractYouTubeID(url);
           if (id) {
-            ytPlayer.src = "https://www.youtube.com/embed/" + id;
+            ytPlayer.src = \`https://www.youtube.com/embed/\${id}\`;
             previewDiv.style.display = "block";
           }
         };
@@ -45,15 +45,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Fungsi utama convert
   function startDownload() {
-    const url = urlInput.value;
+    const url = urlInput.value.trim();
     if (!url || (!url.includes("youtube.com") && !url.includes("youtu.be"))) {
-      alert("Masukkan URL YouTube yang valid.");
+      alert("Masukkan URL YouTube.");
       return;
     }
 
-    console.log("🚀 Mulai konversi:", url);
+    console.log("Mulai convert:", url);
 
     const progress = document.querySelector(".progress");
     const progressBar = document.getElementById("progress-bar");
@@ -77,13 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Tambahkan event listener tombol convert
-  if (convertBtn) {
-    convertBtn.addEventListener("click", startDownload);
-  } else {
-    console.warn("❌ Tombol convert tidak ditemukan di DOM!");
-  }
-
-  // Inisialisasi
+  convertBtn.addEventListener("click", startDownload);
   loadRecommendations();
 });
