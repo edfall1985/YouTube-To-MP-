@@ -1,1 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YT to MP3 Converter</title>
+  <style>
+    body {
+      background: linear-gradient(#0f2027, #203a43, #2c5364);
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    input, button {
+      padding: 10px;
+      width: 80%;
+      max-width: 500px;
+      margin: 10px auto;
+      display: block;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+    }
+    button {
+      background-color: #1db954;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 20px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>YT to MP3 Converter</h1>
+  <input type="text" id="url" placeholder="Paste YouTube URL here..." />
+  <button onclick="download()">Convert to MP3</button>
+  <div id="result"></div>
 
+  <script>
+    const apiUrl = "https://youtube-to-mp3-production.up.railway.app";
+
+    async function download() {
+      const url = document.getElementById("url").value;
+      const resultBox = document.getElementById("result");
+      resultBox.innerText = "Sending request...";
+
+      try {
+        const res = await fetch(apiUrl + "/download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ youtube_url: url }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          resultBox.innerText = "Success!\n\n" + data.log;
+        } else {
+          resultBox.innerText = "Error:\n" + JSON.stringify(data, null, 2);
+        }
+      } catch (err) {
+        resultBox.innerText = "Connection Error:\n" + err;
+      }
+    }
+  </script>
+</body>
+</html>
