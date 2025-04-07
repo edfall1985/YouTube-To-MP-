@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-const YtDlpWrap = require("yt-dlp-wrap");
 const fs = require("fs");
 const path = require("path");
+const { execFile } = require("child_process");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,37 +10,30 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
-
-const ytDlpWrap = new YtDlpWrap("./yt-dlp");
+app.use('/download', express.static(path.join(__dirname, 'download')));
 
 app.get("/", (req, res) => {
-  res.send("🔥 YT to MP3 API Bro Joe is LIVE!");
+  res.send("YT to MP3 API Bro Joe is LIVE!");
 });
 
-app.post("/download", async (req, res) => {
-  const videoUrl = req.body.url;
-
-  if (!videoUrl) {
-    return res.status(400).json({ error: "No URL provided" });
+app.post("/convert", (req, res) => {
+  const { url } = req.body;
+  if (!url) {
+    return res.status(400).json({ status: "error", message: "No URL provided" });
   }
 
-  const outputFile = `download/audio-${Date.now()}.mp3`;
-  const downloader = ytDlpWrap.exec([
-    videoUrl,
-    "--extract-audio",
-    "--audio-format", "mp3",
-    "-o", outputFile
-  ]);
+  const filename = `audio-${Date.now()}.mp3`;
+  const outputPath = path.join(__dirname, "download", filename);
 
-  downloader.on("close", () => {
-    res.json({
-      status: "success",
-      url: `/${outputFile}`
-    });
-  });
-
-  downloader.on("error", (err) => {
-    res.status(500).json({ error: "yt-dlp failed", detail: err.message });
+  execFile("./yt-dlp", [
+    "-x", "--audio-format", "mp3",
+    "-o", outputPath,
+    url
+  ], (err) => {
+    if (err) {
+      return res.status(500).json({ status: "error", message: "yt-dlp failed", detail: err.message });
+    }
+    res.json({ status: "success", url: `/download/${filename}` });
   });
 });
 
