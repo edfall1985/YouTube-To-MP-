@@ -1,40 +1,61 @@
-const express = require("express");
-const { exec } = require("child_process");
-const path = require("path");
-const fs = require("fs");
+import express from "express";
+import { exec, execSync } from "child_process";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Buat folder download kalau belum ada
-const downloadDir = path.join(__dirname, "download");
-if (!fs.existsSync(downloadDir)) {
-  fs.mkdirSync(downloadDir);
+// Middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
+app.use("/download", express.static("download"));
+
+// Pastikan yt-dlp bisa dieksekusi di Railway (Linux)
+try {
+  execSync("chmod +x ./yt-dlp");
+  console.log("✅ yt-dlp marked as executable.");
+} catch (e) {
+  console.warn("⚠️ chmod failed, mungkin tidak dibutuhkan di Windows.");
 }
 
-app.use(express.static("public"));
-app.use(express.json());
+// Pastikan folder download ada
+const downloadFolder = path.join(__dirname, "download");
+if (!fs.existsSync(downloadFolder)) {
+  fs.mkdirSync(downloadFolder);
+  console.log("📁 Folder /download dibuat.");
+}
 
-app.post("/mp3", (req, res) => {
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/index.html"));
+});
+
+app.post("/convert", (req, res) => {
   const url = req.body.url;
-  if (!url) {
-    return res.status(400).json({ error: "No URL provided" });
-  }
+  if (!url) return res.send("❌ URL tidak boleh kosong!");
 
   const filename = `audio_${Date.now()}.mp3`;
-  const filepath = path.join(downloadDir, filename);
+  const filepath = path.join("download", filename);
   const command = `./yt-dlp -x --audio-format mp3 -o "${filepath}" "${url}"`;
 
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`yt-dlp failed: ${stderr}`);
-      return res.status(500).json({ error: "yt-dlp failed" });
+  exec(command, (err, stdout, stderr) => {
+    if (err) {
+      console.error("yt-dlp failed:", stderr);
+      return res.send(`<p>❌ Gagal convert: ${stderr}</p>`);
     }
 
-    res.json({ success: true, file: `/download/${filename}` });
+    console.log("✅ Convert berhasil:", filename);
+    res.send(`
+      <h2>✅ Convert sukses</h2>
+      <a href="/${filepath}" download>Download MP3</a>
+    `);
   });
 });
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`🚀 Server aktif di http://localhost:${port}`);
 });
