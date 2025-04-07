@@ -1,4 +1,10 @@
 {
+
+"scripts": {
+  "start": "node index.js",
+  "postinstall": "chmod +x yt-dlp"
+}
+  
   "name": "youtube-to-mp3",
   "version": "1.0.0",
   "main": "index.js",
