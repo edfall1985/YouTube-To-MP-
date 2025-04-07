@@ -24,10 +24,10 @@ try {
 }
 
 // Pastikan folder download ada
-const downloadFolder = path.join(__dirname, "download");
+const downloadFolder = path.join(__dirname, "downloads");
 if (!fs.existsSync(downloadFolder)) {
   fs.mkdirSync(downloadFolder);
-  console.log("📁 Folder /download dibuat.");
+  console.log("📁 Folder /downloads dibuat.");
 }
 
 app.get("/", (req, res) => {
@@ -49,13 +49,13 @@ app.post("/convert", (req, res) => {
     }
 
     console.log("✅ Convert berhasil:", filename);
-    res.send(`
+    res.send(\`
       <h2>✅ Convert sukses</h2>
-      <a href="/${filepath}" download>Download MP3</a>
-    `);
+      <a href="/downloads/${filename}" download>Download MP3</a>
+    \`);
   });
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Server aktif di http://localhost:${port}`);
+  console.log(\`🚀 Server aktif di http://localhost:${port}\`);
 });
