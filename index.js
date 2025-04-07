@@ -5,7 +5,7 @@ import fs from "fs";
 import YTDlpWrap from "yt-dlp-wrap";
 const app = express();
 const port = process.env.PORT || 8080;
-const ytdlp = new YTDlpWrap("./yt-dlp");
+const ytdlp = YTDlpWrap("./yt-dlp");
 
 if (!fs.existsSync("./download")) {
   fs.mkdirSync("./download");
