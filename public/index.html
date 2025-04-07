@@ -5,129 +5,144 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>YouTube to MP3</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    /* === GLOBAL STYLING === */
+    * { box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
       background: #f2f4f8;
-      padding: 2rem;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
+      margin: 0; padding: 2rem;
+      display: flex; justify-content: center; min-height: 100vh;
     }
+
     .panel {
       background: white;
+      padding: 2rem;
       border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-      padding: 2rem;
-      max-width: 600px;
       width: 100%;
+      max-width: 700px;
     }
+
     h2 {
-      margin-top: 0;
       font-size: 1.75rem;
       color: #333;
+      margin-top: 0;
     }
+
     input[type="text"] {
       width: 100%;
       padding: 0.75rem 1rem;
+      font-size: 1rem;
       border: 1px solid #ccc;
       border-radius: 8px;
-      font-size: 1rem;
       margin-bottom: 1rem;
     }
+
     button {
       width: 100%;
       background-color: #007bff;
       color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
       font-size: 1rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
       border-radius: 8px;
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
+
     button:hover {
       background-color: #0056b3;
     }
+
     .progress {
       margin-top: 1rem;
       width: 100%;
       height: 20px;
       background: #e0e0e0;
       border-radius: 10px;
-      overflow: hidden;
       display: none;
     }
+
     .progress-bar {
       height: 100%;
       width: 0;
       background: #28a745;
       transition: width 0.4s ease;
     }
+
     .status-icon {
+      text-align: center;
       margin-top: 1rem;
       font-size: 2rem;
       display: none;
-      text-align: center;
     }
-    #preview {
+
+    /* === Rekomendasi Video Grid === */
+    #recommend-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
       margin-top: 1.5rem;
-      display: none;
     }
-    #video-info {
-      margin-top: 1rem;
-    }
-    #video-title {
-      margin: 0;
-      font-size: 1.1rem;
-      color: #333;
-    }
-    #video-duration {
-      margin: 0.25rem 0;
-      color: #555;
-    }
-    #video-thumbnail {
+
+    #recommend-list img {
       width: 100%;
       border-radius: 8px;
-      margin-top: 0.5rem;
+    }
+
+    #recommend-list p {
+      font-size: 0.85rem;
+      margin: 0.5rem 0 0;
     }
   </style>
 </head>
 <body>
   <div class="panel">
+    <!-- === HEADING === -->
     <h2>YouTube to MP3</h2>
+
+    <!-- === URL INPUT + BUTTON === -->
     <input id="url" type="text" placeholder="Paste YouTube URL here..." />
     <button onclick="startDownload()">Convert</button>
 
-    <div id="preview">
+    <!-- === VIDEO PREVIEW === -->
+    <div id="preview" style="margin-top: 1.5rem; display: none;">
       <iframe id="yt-player" width="100%" height="300" frameborder="0" allowfullscreen></iframe>
-      <div id="video-info">
+      <div id="video-info" style="margin-top: 1rem;">
         <h3 id="video-title"></h3>
         <p id="video-duration"></p>
-        <img id="video-thumbnail" src="" alt="thumbnail" />
+        <img id="video-thumbnail" src="" alt="thumbnail" style="width: 100%; border-radius: 8px;" />
       </div>
     </div>
 
+    <!-- === PROGRESS BAR === -->
     <div class="progress">
       <div class="progress-bar" id="progress-bar"></div>
     </div>
-
     <div class="status-icon" id="status-icon">✔️</div>
+
+    <!-- === REKOMENDASI VIDEO === -->
+    <h3 style="margin-top: 2rem;">Rekomendasi Video</h3>
+    <div id="recommend-list"></div>
   </div>
 
   <script>
+    // === UTILS ===
+    function extractYouTubeID(url) {
+      const regex = /(?:youtube\.com.*(?:v=|\/embed\/)|youtu\.be\/)([\w-]{11})/;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    }
+
+    // === LOAD PREVIEW ===
     const urlInput = document.getElementById('url');
-    const previewDiv = document.getElementById('preview');
     const ytPlayer = document.getElementById('yt-player');
+    const previewDiv = document.getElementById('preview');
     const videoTitle = document.getElementById('video-title');
     const videoDuration = document.getElementById('video-duration');
     const videoThumbnail = document.getElementById('video-thumbnail');
 
-    urlInput.addEventListener('input', async () => {
+    urlInput.addEventListener('input', () => {
       const videoId = extractYouTubeID(urlInput.value);
       if (videoId) {
         ytPlayer.src = `https://www.youtube.com/embed/${videoId}`;
@@ -139,12 +154,6 @@
       }
     });
 
-    function extractYouTubeID(url) {
-      const regex = /(?:youtube\.com.*(?:v=|\/embed\/)|youtu\.be\/)([\w-]{11})/;
-      const match = url.match(regex);
-      return match ? match[1] : null;
-    }
-
     async function fetchVideoInfo(videoId) {
       const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
       const data = await res.json();
@@ -153,6 +162,7 @@
       videoDuration.textContent = data.author_name ? `Channel: ${data.author_name}` : '';
     }
 
+    // === START DOWNLOAD ===
     function startDownload() {
       const url = urlInput.value;
       if (!url) return alert("Please enter a YouTube URL.");
@@ -161,7 +171,6 @@
       const progressBar = document.getElementById('progress-bar');
       const statusIcon = document.getElementById('status-icon');
 
-      // Reset UI
       progressBar.style.width = '0%';
       progress.style.display = 'block';
       statusIcon.style.display = 'none';
@@ -179,6 +188,36 @@
         }
       };
     }
+
+    // === LOAD VIDEO REKOMENDASI DARI JSON ===
+    async function loadRecommendations() {
+      const container = document.getElementById('recommend-list');
+      const res = await fetch('recommend.json');
+      const urls = await res.json();
+
+      container.innerHTML = '';
+      for (let url of urls.slice(0, 19)) {
+        const data = await fetch(`https://noembed.com/embed?url=${url}`).then(r => r.json());
+        const div = document.createElement('div');
+        div.style.cursor = 'pointer';
+        div.innerHTML = `
+          <img src="${data.thumbnail_url}" alt="${data.title}" />
+          <p>${data.title}</p>
+        `;
+        div.onclick = () => {
+          document.getElementById('url').value = url;
+          ytPlayer.src = `https://www.youtube.com/embed/${extractYouTubeID(url)}`;
+          previewDiv.style.display = 'block';
+          fetchVideoInfo(extractYouTubeID(url));
+        };
+        container.appendChild(div);
+      }
+    }
+
+    // === INITIAL LOAD ===
+    window.onload = () => {
+      loadRecommendations();
+    };
   </script>
 </body>
 </html>
