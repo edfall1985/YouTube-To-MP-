@@ -1,19 +1,3 @@
-# Node modules & logs
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Output folder hasil download MP3
 downloads/
-
-# Binary yt-dlp (biar gak upload ke GitHub)
 yt-dlp
-
-# Lingkungan development
-.env
-.DS_Store
-
-# Railway & system
-*.sqlite
-*.zip

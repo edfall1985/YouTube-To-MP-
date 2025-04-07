@@ -1,46 +1,52 @@
+const express = require("express");
+const path = require("path");
+const { YTDlpWrap } = require("yt-dlp-wrap");
+const fs = require("fs");
+const { v4: uuidv4 } = require("uuid");
 
-import express from "express";
-import cors from "cors";
-import fs from "fs";
-import YTDlpWrap from "yt-dlp-wrap";
 const app = express();
-const port = process.env.PORT || 8080;
-const ytdlp = YTDlpWrap("./yt-dlp");
+const port = process.env.PORT || 3000;
 
-if (!fs.existsSync("./download")) {
-  fs.mkdirSync("./download");
-}
+const ytDlp = new YTDlpWrap("./yt-dlp");
 
-app.use(cors());
-app.use(express.json());
 app.use(express.static("public"));
+app.use("/downloads", express.static("downloads"));
+app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("🔥 YT to MP3 API Bro Joe is LIVE!");
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.post("/convert", async (req, res) => {
-  const { url } = req.body;
+app.post("/api/download", (req, res) => {
+  const url = req.body.url;
   if (!url) return res.status(400).json({ error: "No URL provided" });
 
-  const timestamp = Date.now();
-  const outputPath = `./download/${timestamp}.mp3`;
+  const fileName = `${uuidv4()}.mp3`;
+  const filePath = path.join(__dirname, "downloads", fileName);
 
-  try {
-    await ytdlp.execPromise([
-      url,
-      "-x",
-      "--audio-format",
-      "mp3",
-      "-o",
-      outputPath,
-    ]);
-    return res.json({ success: true, file: outputPath });
-  } catch (error) {
-    return res.status(500).json({ error: "yt-dlp failed", detail: error.message });
-  }
+  const subprocess = ytDlp.exec([
+    url,
+    "-x",
+    "--audio-format",
+    "mp3",
+    "-o",
+    filePath,
+  ]);
+
+  subprocess.once("close", () => {
+    res.json({ success: true, file: `/downloads/${fileName}` });
+  });
+
+  subprocess.stderr.on("data", (data) => {
+    console.error(data.toString());
+  });
+
+  subprocess.on("error", (err) => {
+    console.error("yt-dlp error:", err);
+    res.status(500).json({ error: "yt-dlp failed" });
+  });
 });
 
 app.listen(port, () => {
-  console.log("YT to MP3 running on " + port);
+  console.log(`Server running on port ${port}`);
 });

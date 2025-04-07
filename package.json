@@ -1,16 +1,13 @@
-
 {
-  "name": "youtube-to-mp3",
+  "name": "yt-to-mp3",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "postinstall": "chmod +x yt-dlp"
+    "start": "node index.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
     "express": "^4.18.2",
+    "uuid": "^9.0.0",
     "yt-dlp-wrap": "^2.1.1"
   }
 }

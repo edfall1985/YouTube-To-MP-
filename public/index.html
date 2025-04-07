@@ -1,35 +1,27 @@
-
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>YT to MP3 Converter</title>
-</head>
-<body style="background:#111;color:#0f0;text-align:center">
-  <h1>YT to MP3 Converter</h1>
-  <input id="url" placeholder="https://www.youtube.com/watch?v=xxx" style="width:80%" />
-  <button onclick="convert()">Convert to MP3</button>
-  <pre id="output"></pre>
-  <script>
-    async function convert() {
-      const url = document.getElementById("url").value;
-      document.getElementById("output").textContent = "Sending request...";
-      try {
-        const res = await fetch("/convert", {
+<html>
+  <head>
+    <title>YT to MP3 Converter</title>
+  </head>
+  <body>
+    <h1>YT to MP3 Converter</h1>
+    <input id="url" placeholder="Enter YouTube URL" />
+    <button onclick="download()">Convert</button>
+    <script>
+      async function download() {
+        const url = document.getElementById("url").value;
+        const res = await fetch("/api/download", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url })
+          body: JSON.stringify({ url }),
         });
         const data = await res.json();
         if (data.success) {
-          document.getElementById("output").textContent = "Success! File: " + data.file;
+          window.location.href = data.file;
         } else {
-          document.getElementById("output").textContent = "Error: " + (data.detail || data.error);
+          alert("Download failed: " + data.error);
         }
-      } catch (e) {
-        document.getElementById("output").textContent = "Connection Error:\n" + e;
       }
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
