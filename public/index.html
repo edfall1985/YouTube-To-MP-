@@ -1,31 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>YT to MP3 Converter</title>
   <style>
     body {
-      background-color: #121212;
-      color: #00ff00;
+      background-color: #111;
+      color: #0f0;
       font-family: monospace;
       text-align: center;
-      padding: 50px;
+      margin-top: 100px;
     }
     input, button {
-      font-size: 16px;
       padding: 10px;
       margin: 10px;
-      width: 60%;
+      width: 80%;
+      font-size: 16px;
+    }
+    button {
+      background-color: #0f0;
+      color: black;
+      font-weight: bold;
+    }
+    #result {
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
   <h1>YT to MP3 Converter</h1>
-  <input type="text" id="url" placeholder="https://www.youtube.com/watch?v=...">
-  <br>
+  <input type="text" id="url" placeholder="Paste YouTube URL here" />
   <button onclick="download()">Convert to MP3</button>
-  <pre id="result"></pre>
+  <div id="result"></div>
 
   <script>
+    const apiUrl = "";
+
     async function download() {
       const url = document.getElementById("url").value;
       const resultBox = document.getElementById("result");
@@ -34,20 +45,18 @@
       try {
         const res = await fetch("/download", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ youtube_url: url })
         });
 
         const data = await res.json();
         if (res.ok) {
-          resultBox.innerText = "Success!\n\n" + JSON.stringify(data, null, 2);
+          resultBox.innerHTML = `Success!<br/>File: ${data.file}<br/>${data.message}`;
         } else {
-          resultBox.innerText = "Error:\n" + JSON.stringify(data, null, 2);
+          resultBox.innerText = `Error: ${data.error}`;
         }
       } catch (err) {
-        resultBox.innerText = "Connection Error:\n" + err;
+        resultBox.innerText = `Connection Error:\n${err}`;
       }
     }
   </script>
