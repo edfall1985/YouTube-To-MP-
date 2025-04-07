@@ -13,7 +13,7 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
-app.use("/download", express.static("download"));
+app.use("/downloads", express.static("downloads"));
 
 // Pastikan yt-dlp bisa dieksekusi di Railway (Linux)
 try {
@@ -39,7 +39,7 @@ app.post("/convert", (req, res) => {
   if (!url) return res.send("❌ URL tidak boleh kosong!");
 
   const filename = `audio_${Date.now()}.mp3`;
-  const filepath = path.join("download", filename);
+  const filepath = path.join("downloads", filename);
   const command = `./yt-dlp -x --audio-format mp3 -o "${filepath}" "${url}"`;
 
   exec(command, (err, stdout, stderr) => {
