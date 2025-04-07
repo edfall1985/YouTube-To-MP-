@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { YtDlpWrap } = require("yt-dlp-wrap");
+const { default: YtDlpWrap } = require("yt-dlp-wrap"); // FIX DI SINI
 const fs = require("fs");
 const path = require("path");
 
@@ -21,7 +21,7 @@ app.post("/download", async (req, res) => {
   }
 
   try {
-    const ytDlpWrap = new YtDlpWrap();
+    const ytDlpWrap = new YtDlpWrap(); // Ini sekarang udah valid
     const filename = `audio_${Date.now()}.mp3`;
     const filepath = path.join(__dirname, filename);
 
@@ -34,27 +34,26 @@ app.post("/download", async (req, res) => {
         "--audio-format",
         "mp3",
         "-o",
-        filename
-      ]);
-
-    subprocess.on("close", (code) => {
-      if (fs.existsSync(filepath)) {
-        res.json({
-          status: "success",
-          message: "Download complete",
-          url: `https://youtube-to-mp3-production.up.railway.app/files/${filename}`
-        });
-      } else {
-        res.status(500).json({ error: "Failed to download or convert." });
-      }
-    });
+        filename,
+      ])
+      .on("close", () => {
+        if (fs.existsSync(filepath)) {
+          res.json({
+            status: "success",
+            message: "Download complete",
+            url: `https://youtube-to-mp3-production.up.railway.app/files/${filename}`,
+          });
+        } else {
+          res.status(500).json({ error: "Conversion failed." });
+        }
+      });
   } catch (err) {
     res.status(500).json({ error: "Server error", detail: err.message });
   }
 });
 
-app.use("/files", express.static(__dirname)); // serve mp3 file if needed
+app.use("/files", express.static(__dirname));
 
 app.listen(port, () => {
-  console.log(`YT to MP3 API running at http://localhost:${port}`);
+  console.log(`Server running at http://localhost:${port}`);
 });
