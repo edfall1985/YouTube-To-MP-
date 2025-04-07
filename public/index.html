@@ -1,60 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>YT to MP3 Converter</title>
   <style>
     body {
-      background-color: #1d1d1d;
-      color: #fff;
-      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #00ff00;
+      font-family: monospace;
       text-align: center;
-      padding: 40px;
+      padding: 50px;
     }
     input, button {
-      padding: 10px;
       font-size: 16px;
-      width: 80%;
-      margin-bottom: 20px;
-    }
-    button {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    #result {
-      margin-top: 20px;
-      white-space: pre-line;
+      padding: 10px;
+      margin: 10px;
+      width: 60%;
     }
   </style>
 </head>
 <body>
   <h1>YT to MP3 Converter</h1>
-  <input type="text" id="url" placeholder="https://www.youtube.com/watch?v=..." />
+  <input type="text" id="url" placeholder="https://www.youtube.com/watch?v=...">
+  <br>
   <button onclick="download()">Convert to MP3</button>
-  <div id="result"></div>
+  <pre id="result"></pre>
 
   <script>
-    const apiUrl = "https://youtube-to-mp3-production.up.railway.app";
-
     async function download() {
       const url = document.getElementById("url").value;
       const resultBox = document.getElementById("result");
       resultBox.innerText = "Sending request...";
 
       try {
-        const res = await fetch(apiUrl + "/download", {
+        const res = await fetch("/download", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({ youtube_url: url })
         });
 
         const data = await res.json();
         if (res.ok) {
-          resultBox.innerText = "Success:\n\n" + JSON.stringify(data, null, 2);
+          resultBox.innerText = "Success!\n\n" + JSON.stringify(data, null, 2);
         } else {
-          resultBox.innerText = "Error:\n\n" + JSON.stringify(data, null, 2);
+          resultBox.innerText = "Error:\n" + JSON.stringify(data, null, 2);
         }
       } catch (err) {
         resultBox.innerText = "Connection Error:\n" + err;
