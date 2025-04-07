@@ -1,12 +1,12 @@
 const express = require("express");
 const cors = require("cors");
-const { YTDlpWrap } = require("yt-dlp-wrap");
+const ytDlpWrap = require("yt-dlp-wrap");
 const fs = require("fs");
 const path = require("path");
 
 const app = express();
 const port = process.env.PORT || 3000;
-const ytdlp = new YTDlpWrap();
+const ytdlp = new ytDlpWrap(); // FIX di sini
 
 app.use(cors());
 app.use(express.json());
@@ -22,30 +22,30 @@ app.post("/download", async (req, res) => {
   }
 
   const filename = `audio-${Date.now()}.mp3`;
-  const filepath = path.join(__dirname, filename);
+  const outputPath = path.join(__dirname, filename);
 
   try {
     const subprocess = ytdlp.exec([
       url,
-      "-x",
-      "--audio-format", "mp3",
-      "-o", filepath
+      "-x", "--audio-format", "mp3",
+      "-o", outputPath,
     ]);
 
     subprocess.on("close", () => {
       res.json({
-        message: "Download complete",
-        url: `https://YOUR_CDN_OR_DRIVE_URL/${filename}` // ganti kalau ingin tampilkan link hasil
+        message: "Success, downloaded file (simulasi)",
+        url: "-"
       });
 
-      // Hapus file lokal setelah beberapa waktu (opsional)
-      setTimeout(() => fs.unlinkSync(filepath), 60000);
+      // Auto-delete dalam 1 menit (opsional)
+      setTimeout(() => {
+        if (fs.existsSync(outputPath)) {
+          fs.unlinkSync(outputPath);
+        }
+      }, 60000);
     });
-  } catch (error) {
-    res.status(500).json({
-      error: "Server error",
-      detail: error.message
-    });
+  } catch (err) {
+    res.status(500).json({ error: "Server error", detail: err.message });
   }
 });
 
