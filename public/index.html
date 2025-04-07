@@ -1,14 +1,141 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>YT to MP3</title>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YT to MP3 Converter</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f3f4f6;
+      color: #111827;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      width: 90vw;
+      max-width: 400px;
+      font-size: 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #111827;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1f2937;
+    }
+
+    .progress-container {
+      width: 90vw;
+      max-width: 400px;
+      height: 24px;
+      background-color: #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(to right, #4ade80, #22c55e);
+      transition: width 0.4s ease;
+    }
+
+    .message {
+      margin-top: 20px;
+      font-size: 1rem;
+    }
+
+    .success {
+      color: #10b981;
+      display: flex;
+      align-items: center;
+    }
+
+    .success::before {
+      content: '✔';
+      margin-right: 8px;
+    }
+  </style>
 </head>
-<body style="font-family:sans-serif; text-align:center; margin-top:50px;">
-  <h1>YT to MP3 Converter v0.0.1</h1>
-  <form method="POST" action="/convert">
-    <input type="text" name="url" placeholder="https://www.youtube.com/watch?v=..." size="60" required />
+<body>
+  <h1>YT to MP3 Converter</h1>
+  <form id="convertForm">
+    <input type="text" id="url" placeholder="Paste YouTube URL here" required />
     <button type="submit">Convert</button>
   </form>
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <div class="message" id="message"></div>
+
+  <script>
+    const form = document.getElementById('convertForm');
+    const progressBar = document.getElementById('progressBar');
+    const message = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      message.innerText = '';
+      progressBar.style.width = '0%';
+
+      const url = document.getElementById('url').value;
+      const formData = new URLSearchParams();
+      formData.append('url', url);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/convert', true);
+
+      xhr.onloadstart = () => progressBar.style.width = '5%';
+      xhr.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          progressBar.style.width = percent + '%';
+        }
+      };
+
+      xhr.onload = () => {
+        progressBar.style.width = '100%';
+        message.innerHTML = xhr.responseText;
+      };
+
+      xhr.onerror = () => {
+        progressBar.style.width = '0%';
+        message.innerHTML = '<span style="color:red">❌ Gagal menghubungi server.</span>';
+      };
+
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.send(formData.toString());
+    });
+  </script>
 </body>
 </html>
