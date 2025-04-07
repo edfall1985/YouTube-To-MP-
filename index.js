@@ -1,57 +1,58 @@
 const express = require("express");
 const cors = require("cors");
-const { execSync } = require("child_process");
-const { YtDlpWrap } = require("yt-dlp-wrap"); // FIX di sini
 const fs = require("fs");
 const path = require("path");
-
-try {
-  execSync("curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o yt-dlp && chmod +x yt-dlp");
-  console.log("yt-dlp downloaded");
-} catch (e) {
-  console.error("Failed to download yt-dlp", e.message);
-}
+const { YtDlpWrap } = require("yt-dlp-wrap");
 
 const app = express();
 const port = process.env.PORT || 3000;
-const ytdlp = new YtDlpWrap("./yt-dlp"); // FIX constructor-nya
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static("public")); // serve frontend
 
-app.get("/", (req, res) => {
-  res.send("🔥 YT to MP3 API Bro Joe is LIVE!");
-});
+const ytdlp = new YtDlpWrap();
 
 app.post("/download", async (req, res) => {
   const url = req.body.youtube_url;
-  if (!url) return res.status(400).json({ error: "youtube_url is required" });
-
-  const filename = `audio-${Date.now()}.mp3`;
-  const outputPath = path.join(__dirname, filename);
+  if (!url) return res.status(400).json({ error: "URL is required" });
 
   try {
-    const subprocess = ytdlp.exec([
-      url,
-      "-x", "--audio-format", "mp3",
-      "-o", outputPath,
-    ]);
+    const output = `./output/${Date.now()}.mp3`;
+    let log = "";
 
-    subprocess.on("close", () => {
-      res.json({
-        message: "Downloaded (simulasi)",
-        url: "-"
-      });
+    await new Promise((resolve, reject) => {
+      ytdlp
+        .exec([
+          url,
+          "-f", "bestaudio",
+          "--extract-audio",
+          "--audio-format", "mp3",
+          "-o", output
+        ])
+        .on("progress", p => {
+          log += `[${p.percent}] ${p.eta}\n`;
+        })
+        .on("error", reject)
+        .on("close", () => {
+          resolve();
+        });
+    });
 
-      setTimeout(() => {
-        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-      }, 60000);
+    res.json({
+      status: "success",
+      message: "Download complete",
+      url: output,
     });
   } catch (err) {
-    res.status(500).json({ error: "Server error", detail: err.message });
+    console.error(err);
+    res.status(500).json({
+      error: "Server error",
+      detail: err.toString(),
+    });
   }
 });
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Server ready on port ${port}`);
 });
