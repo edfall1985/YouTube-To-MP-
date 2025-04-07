@@ -1,11 +1,13 @@
 const express = require("express");
 const cors = require("cors");
-const { default: YtDlpWrap } = require("yt-dlp-wrap"); // FIX DI SINI
+const { YTDlpWrap } = require("yt-dlp-wrap");
 const fs = require("fs");
 const path = require("path");
 
 const app = express();
 const port = process.env.PORT || 3000;
+const ytdlp = new YTDlpWrap();
+
 app.use(cors());
 app.use(express.json());
 
@@ -14,46 +16,39 @@ app.get("/", (req, res) => {
 });
 
 app.post("/download", async (req, res) => {
-  const videoUrl = req.body.youtube_url;
-
-  if (!videoUrl) {
-    return res.status(400).json({ error: "YouTube URL is required" });
+  const url = req.body.youtube_url;
+  if (!url) {
+    return res.status(400).json({ error: "youtube_url is required" });
   }
 
-  try {
-    const ytDlpWrap = new YtDlpWrap(); // Ini sekarang udah valid
-    const filename = `audio_${Date.now()}.mp3`;
-    const filepath = path.join(__dirname, filename);
+  const filename = `audio-${Date.now()}.mp3`;
+  const filepath = path.join(__dirname, filename);
 
-    const subprocess = ytDlpWrap
-      .exec([
-        videoUrl,
-        "-f",
-        "bestaudio",
-        "--extract-audio",
-        "--audio-format",
-        "mp3",
-        "-o",
-        filename,
-      ])
-      .on("close", () => {
-        if (fs.existsSync(filepath)) {
-          res.json({
-            status: "success",
-            message: "Download complete",
-            url: `https://youtube-to-mp3-production.up.railway.app/files/${filename}`,
-          });
-        } else {
-          res.status(500).json({ error: "Conversion failed." });
-        }
+  try {
+    const subprocess = ytdlp.exec([
+      url,
+      "-x",
+      "--audio-format", "mp3",
+      "-o", filepath
+    ]);
+
+    subprocess.on("close", () => {
+      res.json({
+        message: "Download complete",
+        url: `https://YOUR_CDN_OR_DRIVE_URL/${filename}` // ganti kalau ingin tampilkan link hasil
       });
-  } catch (err) {
-    res.status(500).json({ error: "Server error", detail: err.message });
+
+      // Hapus file lokal setelah beberapa waktu (opsional)
+      setTimeout(() => fs.unlinkSync(filepath), 60000);
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Server error",
+      detail: error.message
+    });
   }
 });
 
-app.use("/files", express.static(__dirname));
-
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
