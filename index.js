@@ -1,47 +1,46 @@
-const express = require("express");
-const cors = require("cors");
-const fs = require("fs");
-const path = require("path");
-const { execFile } = require("child_process");
-const ytdlp = new YTDlpWrap('./yt-dlp');
+
+import express from "express";
+import cors from "cors";
+import fs from "fs";
+import YTDlpWrap from "yt-dlp-wrap";
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
+const ytdlp = new YTDlpWrap("./yt-dlp");
+
+if (!fs.existsSync("./download")) {
+  fs.mkdirSync("./download");
+}
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
-app.use('/download', express.static(path.join(__dirname, 'download')));
 
 app.get("/", (req, res) => {
-  res.send("YT to MP3 API Bro Joe is LIVE!");
+  res.send("🔥 YT to MP3 API Bro Joe is LIVE!");
 });
 
-app.post("/convert", (req, res) => {
+app.post("/convert", async (req, res) => {
   const { url } = req.body;
-  if (!url) {
-    return res.status(400).json({ status: "error", message: "No URL provided" });
-  }
+  if (!url) return res.status(400).json({ error: "No URL provided" });
 
-import fs from 'fs';
-  if (!fs.existsSync('./download')) {
-    fs.mkdirSync('./download');
-  }
-  
-  const filename = `audio-${Date.now()}.mp3`;
-  const outputPath = path.join(__dirname, "download", filename);
+  const timestamp = Date.now();
+  const outputPath = `./download/${timestamp}.mp3`;
 
-  execFile("./yt-dlp", [
-    "-x", "--audio-format", "mp3",
-    "-o", outputPath,
-    url
-  ], (err) => {
-    if (err) {
-      return res.status(500).json({ status: "error", message: "yt-dlp failed", detail: err.message });
-    }
-    res.json({ status: "success", url: `/download/${filename}` });
-  });
+  try {
+    await ytdlp.execPromise([
+      url,
+      "-x",
+      "--audio-format",
+      "mp3",
+      "-o",
+      outputPath,
+    ]);
+    return res.json({ success: true, file: outputPath });
+  } catch (error) {
+    return res.status(500).json({ error: "yt-dlp failed", detail: error.message });
+  }
 });
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log("YT to MP3 running on " + port);
 });
