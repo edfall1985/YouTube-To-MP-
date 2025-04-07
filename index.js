@@ -22,6 +22,11 @@ app.post("/convert", (req, res) => {
     return res.status(400).json({ status: "error", message: "No URL provided" });
   }
 
+import fs from 'fs';
+  if (!fs.existsSync('./download')) {
+    fs.mkdirSync('./download');
+  }
+  
   const filename = `audio-${Date.now()}.mp3`;
   const outputPath = path.join(__dirname, "download", filename);
 
