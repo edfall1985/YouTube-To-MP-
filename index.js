@@ -1,39 +1,40 @@
 const express = require("express");
-const cors = require("cors");
+const { exec } = require("child_process");
+const path = require("path");
 const fs = require("fs");
-const ytdlp = require("yt-dlp-exec");
-const { v4: uuidv4 } = require("uuid");
+
 const app = express();
+const port = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
+// Buat folder download kalau belum ada
+const downloadDir = path.join(__dirname, "download");
+if (!fs.existsSync(downloadDir)) {
+  fs.mkdirSync(downloadDir);
+}
+
 app.use(express.static("public"));
-app.use("/download", express.static("download"));
+app.use(express.json());
 
-const PORT = process.env.PORT || 8080;
-
-app.post("/api/convert", async (req, res) => {
-  const { url } = req.body;
-  if (!url) return res.status(400).json({ error: "No URL provided" });
-
-  const id = uuidv4();
-  const output = `download/${id}.mp3`;
-
-  try {
-    await ytdlp(url, {
-      output: output,
-      extractAudio: true,
-      audioFormat: "mp3",
-      audioQuality: 0
-    });
-
-    return res.json({ success: true, download: `/download/${id}.mp3` });
-  } catch (err) {
-    console.error("yt-dlp failed:", err);
-    return res.status(500).json({ error: "yt-dlp failed" });
+app.post("/mp3", (req, res) => {
+  const url = req.body.url;
+  if (!url) {
+    return res.status(400).json({ error: "No URL provided" });
   }
+
+  const filename = `audio_${Date.now()}.mp3`;
+  const filepath = path.join(downloadDir, filename);
+  const command = `./yt-dlp -x --audio-format mp3 -o "${filepath}" "${url}"`;
+
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`yt-dlp failed: ${stderr}`);
+      return res.status(500).json({ error: "yt-dlp failed" });
+    }
+
+    res.json({ success: true, file: `/download/${filename}` });
+  });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
