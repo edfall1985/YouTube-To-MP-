@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>YT to MP3 Converter</title>
+  <title>YT to MP3 Converter v0.0.1</title>
+  <meta charset="UTF-8" />
 </head>
-<body>
+<body style="font-family:sans-serif; text-align:center; margin-top:50px;">
   <h1>YT to MP3 Converter</h1>
-  <form action="/convert" method="POST">
-    <input type="text" name="url" placeholder="https://youtube.com/watch?v=..." size="60" required />
+  <form method="POST" action="/convert">
+    <input type="text" name="url" placeholder="https://www.youtube.com/watch?v=..." size="60" required />
     <button type="submit">Convert</button>
   </form>
 </body>
