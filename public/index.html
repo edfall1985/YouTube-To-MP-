@@ -1,27 +1,42 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>YT to MP3 Converter</title>
-  </head>
-  <body>
-    <h1>YT to MP3 Converter</h1>
-    <input id="url" placeholder="Enter YouTube URL" />
-    <button onclick="download()">Convert</button>
-    <script>
-      async function download() {
-        const url = document.getElementById("url").value;
-        const res = await fetch("/api/download", {
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YT to MP3 Converter</title>
+</head>
+<body style="font-family: Arial, sans-serif; text-align: center; margin-top: 100px;">
+  <h1>YT to MP3 Converter</h1>
+  <input type="text" id="urlInput" placeholder="https://www.youtube.com/watch?v=..." size="50">
+  <button onclick="convert()">Convert</button>
+  <div id="result" style="margin-top: 20px; font-weight: bold;"></div>
+
+  <script>
+    async function convert() {
+      const url = document.getElementById("urlInput").value;
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerText = "Processing...";
+
+      try {
+        const response = await fetch("/mp3", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ url }),
         });
-        const data = await res.json();
+
+        const data = await response.json();
+
         if (data.success) {
-          window.location.href = data.file;
+          resultDiv.innerHTML = `<a href="${data.file}" download>Download MP3</a>`;
         } else {
-          alert("Download failed: " + data.error);
+          resultDiv.innerText = "Error: " + (data.error || "Unknown error");
         }
+      } catch (err) {
+        resultDiv.innerText = "Request failed: " + err.message;
       }
-    </script>
-  </body>
+    }
+  </script>
+</body>
 </html>
