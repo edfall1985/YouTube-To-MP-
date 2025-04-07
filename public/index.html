@@ -1,62 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>YT to MP3 Converter</title>
   <style>
-    body {
-      background-color: #111;
-      color: #0f0;
-      font-family: monospace;
-      text-align: center;
-      margin-top: 100px;
-    }
-    input, button {
-      padding: 10px;
-      margin: 10px;
-      width: 80%;
-      font-size: 16px;
-    }
-    button {
-      background-color: #0f0;
-      color: black;
-      font-weight: bold;
-    }
-    #result {
-      margin-top: 20px;
-    }
+    body { background-color: black; color: lime; font-family: monospace; text-align: center; margin-top: 100px; }
+    input, button { font-size: 18px; padding: 8px; width: 60%; }
   </style>
 </head>
 <body>
   <h1>YT to MP3 Converter</h1>
   <input type="text" id="url" placeholder="Paste YouTube URL here" />
-  <button onclick="download()">Convert to MP3</button>
-  <div id="result"></div>
+  <br><br>
+  <button onclick="convert()">Convert to MP3</button>
+  <p id="status"></p>
 
   <script>
-    const apiUrl = "";
-
-    async function download() {
+    async function convert() {
       const url = document.getElementById("url").value;
-      const resultBox = document.getElementById("result");
-      resultBox.innerText = "Sending request...";
-
+      document.getElementById("status").innerText = "Sending request...";
       try {
-        const res = await fetch("/download", {
+        const res = await fetch("https://youtube-to-mp3-production.up.railway.app/convert", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ youtube_url: url })
+          body: JSON.stringify({ url })
         });
-
         const data = await res.json();
-        if (res.ok) {
-          resultBox.innerHTML = `Success!<br/>File: ${data.file}<br/>${data.message}`;
+        if (data.status === "success") {
+          document.getElementById("status").innerHTML = 'Success! <a href="' + data.url + '" target="_blank">Download MP3</a>';
         } else {
-          resultBox.innerText = `Error: ${data.error}`;
+          document.getElementById("status").innerText = "Error: " + data.message;
         }
       } catch (err) {
-        resultBox.innerText = `Connection Error:\n${err}`;
+        document.getElementById("status").innerText = "Connection Error: " + err.message;
       }
     }
   </script>
