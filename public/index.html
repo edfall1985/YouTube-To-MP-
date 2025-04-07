@@ -2,133 +2,183 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YT to MP3 Converter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YouTube to MP3</title>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f5f7fa;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
+    * {
+      box-sizing: border-box;
     }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 20px;
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f2f4f8;
+      padding: 2rem;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .panel {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      padding: 2rem;
+      max-width: 600px;
+      width: 100%;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 1.75rem;
+      color: #333;
     }
     input[type="text"] {
       width: 100%;
-      max-width: 400px;
-      padding: 12px;
+      padding: 0.75rem 1rem;
       border: 1px solid #ccc;
       border-radius: 8px;
-      margin-bottom: 10px;
       font-size: 1rem;
+      margin-bottom: 1rem;
     }
     button {
-      padding: 12px 24px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      background: #28a745;
+      width: 100%;
+      background-color: #007bff;
       color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 8px;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: background-color 0.3s ease;
     }
     button:hover {
-      background: #218838;
+      background-color: #0056b3;
     }
-    #progress {
+    .progress {
+      margin-top: 1rem;
       width: 100%;
-      max-width: 400px;
-      height: 16px;
-      background: #eee;
-      border-radius: 20px;
+      height: 20px;
+      background: #e0e0e0;
+      border-radius: 10px;
       overflow: hidden;
-      margin-top: 20px;
       display: none;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
     }
-    #progress .bar {
+    .progress-bar {
       height: 100%;
       width: 0;
-      background: linear-gradient(90deg, #4CAF50, #81C784);
-      animation: progressAnim 2s infinite linear;
-      transition: width 0.5s ease-in-out;
+      background: #28a745;
+      transition: width 0.4s ease;
     }
-    @keyframes progressAnim {
-      0% { background-position: 0% 0%; }
-      100% { background-position: 100% 0%; }
-    }
-    .checkmark {
+    .status-icon {
+      margin-top: 1rem;
       font-size: 2rem;
-      color: green;
-      margin-top: 20px;
       display: none;
-      animation: pop 0.4s ease forwards;
+      text-align: center;
     }
-    @keyframes pop {
-      0% { transform: scale(0.5); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+    #preview {
+      margin-top: 1.5rem;
+      display: none;
     }
-    .link {
-      margin-top: 10px;
+    #video-info {
+      margin-top: 1rem;
+    }
+    #video-title {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #333;
+    }
+    #video-duration {
+      margin: 0.25rem 0;
+      color: #555;
+    }
+    #video-thumbnail {
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 0.5rem;
     }
   </style>
 </head>
 <body>
-  <h1>YT to MP3 Converter</h1>
-  <form id="convertForm">
-    <input type="text" name="url" id="url" placeholder="https://youtube.com/watch?v=..." required />
-    <br />
-    <button type="submit">Convert</button>
-  </form>
-  <div id="progress">
-    <div class="bar"></div>
+  <div class="panel">
+    <h2>YouTube to MP3</h2>
+    <input id="url" type="text" placeholder="Paste YouTube URL here..." />
+    <button onclick="startDownload()">Convert</button>
+
+    <div id="preview">
+      <iframe id="yt-player" width="100%" height="300" frameborder="0" allowfullscreen></iframe>
+      <div id="video-info">
+        <h3 id="video-title"></h3>
+        <p id="video-duration"></p>
+        <img id="video-thumbnail" src="" alt="thumbnail" />
+      </div>
+    </div>
+
+    <div class="progress">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div class="status-icon" id="status-icon">✔️</div>
   </div>
-  <div class="checkmark" id="check">✔</div>
-  <div class="link" id="result"></div>
 
   <script>
-    const form = document.getElementById('convertForm');
-    const progressBar = document.querySelector('#progress');
-    const bar = document.querySelector('.bar');
-    const check = document.getElementById('check');
-    const result = document.getElementById('result');
+    const urlInput = document.getElementById('url');
+    const previewDiv = document.getElementById('preview');
+    const ytPlayer = document.getElementById('yt-player');
+    const videoTitle = document.getElementById('video-title');
+    const videoDuration = document.getElementById('video-duration');
+    const videoThumbnail = document.getElementById('video-thumbnail');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      progressBar.style.display = 'block';
-      check.style.display = 'none';
-      result.innerHTML = '';
-      bar.style.width = '5%';
-      let fakeProgress = 5;
-
-      const fakeInterval = setInterval(() => {
-        fakeProgress += Math.random() * 10;
-        if (fakeProgress < 90) {
-          bar.style.width = fakeProgress + '%';
-        }
-      }, 300);
-
-      const res = await fetch('/convert', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `url=${encodeURIComponent(url.value)}`
-      });
-      const html = await res.text();
-      clearInterval(fakeInterval);
-      bar.style.width = '100%';
-      setTimeout(() => {
-        progressBar.style.display = 'none';
-        check.style.display = 'block';
-        result.innerHTML = html;
-      }, 800);
+    urlInput.addEventListener('input', async () => {
+      const videoId = extractYouTubeID(urlInput.value);
+      if (videoId) {
+        ytPlayer.src = `https://www.youtube.com/embed/${videoId}`;
+        previewDiv.style.display = 'block';
+        fetchVideoInfo(videoId);
+      } else {
+        ytPlayer.src = '';
+        previewDiv.style.display = 'none';
+      }
     });
+
+    function extractYouTubeID(url) {
+      const regex = /(?:youtube\.com.*(?:v=|\/embed\/)|youtu\.be\/)([\w-]{11})/;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    }
+
+    async function fetchVideoInfo(videoId) {
+      const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+      const data = await res.json();
+      videoTitle.textContent = data.title || 'Judul tidak ditemukan';
+      videoThumbnail.src = data.thumbnail_url || '';
+      videoDuration.textContent = data.author_name ? `Channel: ${data.author_name}` : '';
+    }
+
+    function startDownload() {
+      const url = urlInput.value;
+      if (!url) return alert("Please enter a YouTube URL.");
+
+      const progress = document.querySelector('.progress');
+      const progressBar = document.getElementById('progress-bar');
+      const statusIcon = document.getElementById('status-icon');
+
+      // Reset UI
+      progressBar.style.width = '0%';
+      progress.style.display = 'block';
+      statusIcon.style.display = 'none';
+
+      const eventSource = new EventSource(`/convert?url=${encodeURIComponent(url)}`);
+      eventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        if (data.progress) {
+          progressBar.style.width = data.progress + '%';
+        }
+        if (data.status === 'done') {
+          progressBar.style.width = '100%';
+          statusIcon.style.display = 'block';
+          eventSource.close();
+        }
+      };
+    }
   </script>
 </body>
 </html>
