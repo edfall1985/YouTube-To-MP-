@@ -3,9 +3,11 @@ const fs = require("fs");
 const path = require("path");
 const { execFile } = require("child_process");
 const cors = require("cors");
-
 const app = express();
 const port = process.env.PORT || 3000;
+
+const { execSync } = require("child_process");
+execSync("chmod +x ./yt-dlp");
 
 app.use(cors());
 app.use(express.json());
