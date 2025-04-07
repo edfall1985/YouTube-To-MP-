@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", () => {
   console.log("convert.js loaded!");
 
@@ -8,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewDiv = document.getElementById("preview");
 
   function extractYouTubeID(url) {
-    const regex = /(?:youtube\.com.*(?:v=|\/embed\/)|youtu\.be\/)([\w-]{11})/;
+    const regex = /(?:youtube\\.com.*(?:v=|\\/embed\\/)|youtu\\.be\\/)([\\w-]{11})/;
     const match = url.match(regex);
     return match ? match[1] : null;
   }
@@ -33,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
           urlInput.value = url;
           const id = extractYouTubeID(url);
           if (id) {
-            ytPlayer.src = \`https://www.youtube.com/embed/\${id}\`;
+            ytPlayer.src = `https://www.youtube.com/embed/${id}`;
             previewDiv.style.display = "block";
           }
         };
